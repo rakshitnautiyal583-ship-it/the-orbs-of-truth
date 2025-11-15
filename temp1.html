@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Orbs of Truth — Fixed</title>
+
+    <!-- Load Tailwind (defer to avoid blocking) -->
+    <script id="tailwind-cdn" src="https://cdn.tailwindcss.com" defer></script>
+
+    <!-- Load fonts correctly -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind configuration: run after Tailwind is available -->
+    <script>
+    (function(){
+        const config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'deep-blue': '#0A192F',
+                        'light-spark': '#89D9E8',
+                        'magical-glow': '#4A90E2',
+                        'warm-amber': '#FFC371',
+                        'dark-bg': '#0D1E3A',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Lora', 'serif'],
+                    }
+                }
+            }
+        };
+
+        function applyTailwindConfig(){
+            try{
+                if (window.tailwind) {
+                    window.tailwind.config = Object.assign(window.tailwind.config || {}, config);
+                } else {
+                    window.tailwind = window.tailwind || {};
+                    window.tailwind.config = Object.assign(window.tailwind.config || {}, config);
+                }
+            } catch (err){
+                window.tailwind = window.tailwind || {};
+                window.tailwind.config = Object.assign(window.tailwind.config || {}, config);
+                console.warn('Tailwind config applied (fallback).', err && err.message);
+            }
+        }
+
+        const twScript = document.getElementById('tailwind-cdn');
+        if (twScript) {
+            applyTailwindConfig();
+            twScript.addEventListener('load', applyTailwindConfig, { once: true });
+        } else {
+            document.addEventListener('DOMContentLoaded', applyTailwindConfig, { once: true });
+        }
+    })();
+    </script>
+
+    <style>
+        /* Fonts are already loaded with a link tag above */
+
+        body { background: linear-gradient(160deg, #071428 0%, #0f3358 100%); min-height: 100vh; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; position: relative; }
+
+        /* Header */
+        .site-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px;width:100%;max-width:980px;margin-left:auto;margin-right:auto;padding:0 28px}
+        .site-header .title-wrap{text-align:left}
+        .site-header .title-wrap h1{font-size:28px;margin:0}
+        .site-header .title-wrap p{margin:8px 0 0;color:#cfe8ff}
+
+        /* Timer */
+        .timer-box{background:rgba(255,255,255,0.04);backdrop-filter:blur(6px);padding:10px 14px;border-radius:12px;border:1px solid rgba(74,144,226,0.12);text-align:right}
+        .timer-title{font-size:11px;color:#cfe8ff;letter-spacing:1px}
+        .timer-value{font-weight:700;color:#eaf6ff;margin-top:6px}
+
+        /* Orbs - softer, sorrowful pulse */
+        @keyframes slow-sigh {
+            0% { transform: translateY(0) scale(1); filter: blur(0px); box-shadow: 0 0 8px rgba(74,144,226,0.08);} 
+            40% { transform: translateY(-8px) scale(1.01); filter: blur(0.4px); box-shadow: 0 0 18px rgba(74,144,226,0.12);} 
+            70% { transform: translateY(-4px) scale(1.005); filter: blur(0.2px); }
+            100% { transform: translateY(0) scale(1); filter: blur(0px); }
+        }
+        .orb-glow-active { animation: slow-sigh 5.5s ease-in-out infinite; border-color: rgba(74,144,226,0.85); background: linear-gradient(145deg, rgba(74,144,226,0.04), rgba(10,25,47,0.24)); backdrop-filter: blur(4px); }
+        .orb-glow-locked { box-shadow: 0 0 6px rgba(0,0,0,0.6); cursor: default; opacity: 0.28; filter: grayscale(70%); border-color: #2b3e55; transition: all 0.6s ease-in-out; }
+
+        /* Apologetic broken animation - slow tremble + soft fade */
+        @keyframes sad-tremble {
+            0% { transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+            20% { transform: translateY(-6px) rotate(-0.6deg) scale(0.998); }
+            40% { transform: translateY(4px) rotate(0.8deg) scale(0.996); }
+            60% { transform: translateY(-2px) rotate(-0.4deg) scale(0.998); }
+            80% { transform: translateY(2px) rotate(0.3deg) scale(0.999); }
+            100% { transform: translateY(0) rotate(0) scale(1); }
+        }
+        .broken { animation: sad-tremble 1.2s cubic-bezier(.2,.8,.2,1) both; }
+
+        /* Modal: softer entrance and a faint 'tear' overlay that slowly pulses */
+        @keyframes modal-fade-in { 0% { opacity: 0; transform: scale(0.96) translateY(8px);} 100% { opacity: 1; transform: scale(1) translateY(0);} }
+        .modal-enter { animation: modal-fade-in 0.5s cubic-bezier(.2,.8,.2,1) forwards; }
+        .modal-tear { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: 0.14; background-image: repeating-linear-gradient( -45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 6px); border-radius: 14px; animation: tear-pulse 3.6s ease-in-out infinite; }
+        @keyframes tear-pulse { 0% { opacity: 0.08 } 50% { opacity: 0.18 } 100% { opacity: 0.08 } }
+
+        /* subtle crack lines that fade in on modal open */
+        .modal-cracks { position:absolute; inset:0; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><g stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"><path d="M20 80 L120 60 L160 130 L220 110"/><path d="M480 40 L420 120 L360 100 L300 160"/></g></svg>'); opacity:0; transition:opacity 0.9s ease-in-out; pointer-events:none; }
+        .modal-enter .modal-cracks { opacity:1; }
+
+        /* sparkle preserved but slower and softer */
+        @keyframes sparkle-burst { 0% { transform: scale(0.7); opacity: 0.35; } 60% { transform: scale(1.02); opacity: 1; box-shadow: 0 0 24px rgba(137,217,232,0.5);} 100% { transform: scale(1); opacity: 1; } }
+        .sparkle-animation { animation: sparkle-burst 0.8s ease-out forwards; }
+
+        /* Typewriter styling: slower, more deliberate */
+        .typewriter-text { font-family: 'Lora', serif; overflow: hidden; white-space: pre-wrap; opacity: 1; font-size:16px; line-height:1.7; color: #e6f3ff }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #FFC371; } }
+        .typewriter-cursor { border-right: 2px solid #FFC371; animation: blink-caret 0.9s step-end infinite; }
+
+        /* star particles - gentle slow drift */
+        .star-particle { position: absolute; width: 2px; height: 2px; background: rgba(255,255,255,0.35); border-radius: 50%; pointer-events: none; z-index: -1; opacity: 0; animation: float-star 28s infinite linear; }
+        .star-particle:nth-child(even) { animation-duration: 22s; width: 3px; height: 3px; background: rgba(137,217,232,0.45); }
+        @keyframes float-star { 0%{ transform: translateY(120vh)}100%{ transform: translateY(-40vh)} }
+
+        .modal-body{max-height:60vh;overflow:auto;padding-right:6px}
+        @media (max-width:720px){ .site-header{flex-direction:column;align-items:center;padding:0 18px} .timer-box{margin-top:12px} .site-header .title-wrap{text-align:center} }
+    </style>
+</head>
+<body class="flex flex-col items-center p-4 sm:p-8">
+
+    <div id="star-field" class="fixed inset-0 overflow-hidden">
+        <div class="star-particle" style="top: 10%; left: 5%; animation-delay: 0s;"></div>
+        <div class="star-particle" style="top: 25%; left: 20%; animation-delay: 2s;"></div>
+        <div class="star-particle" style="top: 50%; left: 45%; animation-delay: 4s;"></div>
+        <div class="star-particle" style="top: 75%; left: 60%; animation-delay: 6s;"></div>
+        <div class="star-particle" style="top: 90%; left: 85%; animation-delay: 8s;"></div>
+        <div class="star-particle" style="top: 5%; left: 95%; animation-delay: 10s;"></div>
+        <div class="star-particle" style="top: 15%; left: 70%; animation-delay: 1s;"></div>
+        <div class="star-particle" style="top: 35%; left: 10%; animation-delay: 3s;"></div>
+        <div class="star-particle" style="top: 65%; left: 30%; animation-delay: 5s;"></div>
+        <div class="star-particle" style="top: 85%; left: 50%; animation-delay: 7s;"></div>
+        <div class="star-particle" style="top: 40%; left: 75%; animation-delay: 9s;"></div>
+        <div class="star-particle" style="top: 60%; left: 5%; animation-delay: 11s;"></div>
+        <div class="star-particle" style="top: 20%; left: 40%; animation-delay: 12s;"></div>
+        <div class="star-particle" style="top: 70%; left: 90%; animation-delay: 13s;"></div>
+        <div class="star-particle" style="top: 30%; left: 55%; animation-delay: 14s;"></div>
+        <div class="star-particle" style="top: 10%; left: 35%; animation-delay: 15s;"></div>
+        <div class="star-particle" style="top: 80%; left: 15%; animation-delay: 16s;"></div>
+        <div class="star-particle" style="top: 55%; left: 80%; animation-delay: 17s;"></div>
+        <div class="star-particle" style="top: 45%; left: 25%; animation-delay: 18s;"></div>
+        <div class="star-particle" style="top: 75%; left: 70%; animation-delay: 19s;"></div>
+        <div class="star-particle" style="top: 15%; left: 65%; animation-delay: 20s;"></div>
+        <div class="star-particle" style="top: 85%; left: 35%; animation-delay: 21s;"></div>
+        <div class="star-particle" style="top: 5%; left: 50%; animation-delay: 22s;"></div>
+        <div class="star-particle" style="top: 90%; left: 75%; animation-delay: 23s;"></div>
+        <div class="star-particle" style="top: 35%; left: 90%; animation-delay: 24s;"></div>
+    </div>
+    
+    <div class="site-header relative z-10">
+        <div class="title-wrap">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-light-spark tracking-wider mb-2">The Orbs of Truth</h1>
+            <p class="text-gray-300 text-lg font-serif">I want you to read this when you're calm. This is my heart, not my defense.</p>
+        </div>
+
+        <div class="timer-box">
+            <div class="timer-title">FROM THE TIME YOU HAVEN'T TALKED TO ME</div>
+            <div id="timer" class="timer-value">calculating...</div>
+        </div>
+    </div>
+
+    <div id="orb-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-4xl mb-8 relative z-10"></div>
+
+    <div id="story-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 hidden" aria-hidden="true">
+        <div id="modal-content" class="bg-dark-bg border border-magical-glow rounded-xl p-6 sm:p-10 max-w-2xl w-full orb-glow-active transition-all duration-500 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-tear" aria-hidden="true"></div> 
+            <div class="modal-cracks" aria-hidden="true"></div>
+            <h2 id="modal-title" class="text-3xl font-bold text-warm-amber mb-4 font-sans"></h2>
+            <div class="modal-body typewriter-text" id="modal-text" tabindex="0"></div>
+            <div class="mt-4 flex items-center gap-3 justify-between">
+                <div class="flex items-center gap-2">
+                    <button id="play-audio" class="px-4 py-2 bg-transparent border border-magical-glow rounded-full text-light-spark">Play voice</button>
+                    <button id="replay-audio" class="px-4 py-2 bg-transparent border border-magical-glow rounded-full text-light-spark">Replay</button>
+                    <button id="mute-audio" class="px-3 py-2 bg-transparent border border-magical-glow rounded-full text-light-spark">Mute</button>
+                </div>
+                <button id="close-modal-btn" class="px-6 py-2 bg-magical-glow text-white font-semibold rounded-full hover:bg-light-spark transition duration-300 shadow-lg">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="final-message" class="hidden text-center mt-12 max-w-3xl border border-warm-amber bg-dark-bg p-8 rounded-xl shadow-2xl relative z-10" aria-live="polite">
+        <h2 class="text-3xl font-extrabold text-warm-amber mb-4 font-sans">The Anchor</h2>
+        <p class="text-gray-200 text-lg leading-relaxed font-serif" id="final-text"></p>
+    </div>
+
+    <!-- Audio elements: embedded data URIs so audio plays locally -->
+    <!-- NOTE: these audio tags embed your uploaded MP3s as data URIs. The HTML file will be large but playable without a server. -->
+    <!-- Audio elements: reference files hosted in /audio/*.mp3 (place mp3s in your Vercel project's `public/audio/` folder)
+    <!-- This keeps the HTML small and is the recommended approach for hosting on Vercel. -->
+    <audio id="audio-1" data-src="audio/orb1.mp3" preload="metadata"></audio>
+    <audio id="audio-2" data-src="audio/orb2.mp3" preload="metadata"></audio>
+    <audio id="audio-3" data-src="audio/orb3.mp3" preload="metadata"></audio>
+    <audio id="audio-4" data-src="audio/orb4.mp3" preload="metadata"></audio>
+    <audio id="audio-5" data-src="audio/orb5.mp3" preload="metadata"></audio>
+    <audio id="audio-7" data-src="audio/orb7.mp3" preload="metadata"></audio>
+
+<script type="module">
+// --- Data ---
+const orbs = [
+    { id: 1, title: "Why I Snapped That Night", icon: "🌌", content: "I saw Zain's comment and it was really vulgar. The words he used for you made me go crazy. I started fighting because I can't see anyone talk about you like that. I know I should have talked to you first but my intentions were never to hurt you." },
+    { id: 2, title: "What Panic Made Me Do", icon: "⚡", content: "I panicked and did everything that came into my mind to stop him from sending those things. I know I shouldn't have done all that but it was really just to protect. I had no intention to harm anyone. And honestly people like him deserve it, maybe not that extreme, but a little bit." },
+    { id: 3, title: "Why I Lied", icon: "🛡️", content: "I lied only to protect you. You had your photo on your profile and I felt if I told him the truth, that I did all this for you, he might misuse your picture. Believe me that is the only reason I used that girl's name. I never even talked to her before." },
+    { id: 4, title: "How Zain Twisted It", icon: "💔", content: "Zain knew the whole story but I don’t know what half story he told you. He told you I called that girl my real sister when I even told him at the end that I barely knew her. He twisted and hid so many parts just to make you against me. What hurt me was that you didn’t even ask me once about it." },
+    { id: 5, title: "How Your Words Hit Me", icon: "💥", content: "The moment you said you don’t trust me anymore and that I might be the one abusing you really shook me. From the moment I met you I have never abused you or even thought of it. I could never do that to you no matter what. But you didn’t think once before telling me to fk off. I understand you were angry but hearing that you don’t trust me hurt me a lot." },
+    { id: 7, title: "I Want Your Trust Back", icon: "🌱", content: "I just want you to trust me again. I know I behave like a lunatic sometimes but I will really fix myself. Just please don’t stop talking to me." },
+    { id: 8, title: "Please Don't Fear Me", icon: "💙", content: "If you ever listened again, I am not dangerous. Please don’t distance yourself from me." }
+];
+
+/* Timer start (Asia/Kolkata) */
+const startIso = '2025-11-11T23:00:00+05:30';
+function updateTimer(){
+    const start = new Date(startIso);
+    const now = new Date();
+    let diff = Math.max(0, now - start);
+    const days = Math.floor(diff / (24*60*60*1000));
+    diff -= days * 24*60*60*1000;
+    const hours = Math.floor(diff / (60*60*1000));
+    diff -= hours * 60*60*1000;
+    const minutes = Math.floor(diff / (60*1000));
+    diff -= minutes * 60*1000;
+    const seconds = Math.floor(diff / 1000);
+    const label = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    const timerEl = document.getElementById('timer');
+    if (timerEl) timerEl.textContent = label;
+}
+
+/* State */
+let unlockedIndex = 0;
+let lastReadIndex = -1;
+let isTyping = false;
+let currentAudio = null;
+let audioMuted = false;
+let lastFocusedElementBeforeModal = null;
+
+/* audio mapping by orb id (safer than by numeric index) */
+function getAudioForOrbIndex(idx){
+    const orb = orbs[idx];
+    if (!orb) return null;
+    const map = { 1: 'audio-1', 2: 'audio-2', 3: 'audio-3', 4: 'audio-4', 5: 'audio-5', 7: 'audio-7' };
+    const audioId = map[orb.id];
+    const el = audioId ? document.getElementById(audioId) : null;
+    // If the element has a data-src (developer can set this), assign it to src so browsers will load it when asked to play
+    if (el && el.dataset && el.dataset.src) {
+        if (!el.src || el.src.endsWith('/')) { // only assign if not already set
+            el.src = el.dataset.src;
+        }
+    }
+    return el;
+}
+
+/* Typewriter: robust implementation */
+function typewriter(el, text, delay = 24){
+    isTyping = true;
+    el.innerHTML = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'typewriter-cursor';
+    el.appendChild(cursor);
+    let i = 0;
+    return new Promise(resolve => {
+        function step(){
+            if (i < text.length){
+                const visible = text.substring(0, i+1).replace(/\n/g, '<br>');
+                el.innerHTML = visible;
+                el.appendChild(cursor); // re-attach cursor element
+                i++;
+                setTimeout(step, delay);
+            } else {
+                if (cursor && cursor.parentNode) cursor.parentNode.removeChild(cursor);
+                isTyping = false;
+                resolve();
+            }
+        }
+        step();
+    });
+}
+
+/* Render orbs as accessible buttons */
+function renderOrbs(){
+    const grid = document.getElementById('orb-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    orbs.forEach((o, idx) => {
+        const isUnlocked = idx <= unlockedIndex;
+        const isRead = idx <= lastReadIndex;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-controls', 'story-modal');
+        btn.className = `p-6 flex flex-col items-center justify-center text-center rounded-2xl border-2 transition duration-500 ease-in-out h-36 sm:h-44 ${isUnlocked? 'orb-glow-active':'orb-glow-locked'}`;
+        if (!isUnlocked) {
+            btn.style.opacity = '0.35';
+            btn.disabled = true;
+            btn.setAttribute('aria-disabled', 'true');
+        } else {
+            btn.disabled = false;
+            btn.setAttribute('aria-disabled', 'false');
+        }
+        btn.innerHTML = `<div class="text-5xl mb-2">${o.icon}</div><p class="text-sm font-semibold ${isUnlocked? 'text-white':'text-gray-400'}">${o.title}</p>`;
+        if (isRead) {
+            const tag = document.createElement('span');
+            tag.className = 'text-xs text-warm-amber mt-1';
+            tag.textContent = '✓ Revealed';
+            btn.appendChild(tag);
+        } else if (!isUnlocked) {
+            const tag2 = document.createElement('span');
+            tag2.className = 'text-xs text-gray-400 mt-1';
+            tag2.textContent = 'SEALED';
+            btn.appendChild(tag2);
+        }
+        btn.addEventListener('click', () => openOrb(idx));
+        btn.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                ev.preventDefault();
+                openOrb(idx);
+            }
+        });
+        grid.appendChild(btn);
+    });
+}
+
+/* Open orb: shows modal, plays audio if present, syncs typewriter speed to audio duration when possible */
+async function openOrb(idx){
+    if (idx > unlockedIndex || isTyping) return;
+    const modal = document.getElementById('story-modal');
+    const title = document.getElementById('modal-title');
+    const textEl = document.getElementById('modal-text');
+    const playBtn = document.getElementById('play-audio');
+
+    if (!modal || !title || !textEl) return;
+
+    // store focus and prevent background scroll
+    lastFocusedElementBeforeModal = document.activeElement;
+    document.body.style.overflow = 'hidden';
+
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.getElementById('modal-content').classList.add('modal-enter');
+    title.textContent = (orbs[idx].title || '').replace(/-/g, '');
+
+    // stop any currently playing audio
+    if (currentAudio){
+        try { currentAudio.pause(); currentAudio.currentTime = 0; } catch(e) {}
+    }
+    currentAudio = getAudioForOrbIndex(idx);
+    
+    // Hide play button by default then only show if there's a usable source
+    if (playBtn) playBtn.classList.add('hidden');
+
+    if(currentAudio) {
+        // If audio element has no src, don't show play
+        const hasSrc = !!currentAudio.src && currentAudio.src.trim() !== '';
+        if (!hasSrc && currentAudio.dataset && currentAudio.dataset.src) {
+            // lazily assign data-src to src so browser can load it
+            currentAudio.src = currentAudio.dataset.src;
+        }
+
+        // Listen for load errors
+        currentAudio.addEventListener('error', (ev) => {
+            console.warn('Audio element error', ev);
+            if (playBtn) playBtn.classList.add('hidden');
+        }, { once: true });
+
+        // Show play button only if src is present and canPlayType reports support for common audio types
+        const srcPresent = !!currentAudio.src && currentAudio.src.trim() !== '';
+        const canPlay = srcPresent ? (currentAudio.canPlayType && (currentAudio.canPlayType('audio/mpeg') || currentAudio.canPlayType('audio/ogg') || currentAudio.canPlayType('audio/mp4') )) : '';
+        if (srcPresent && canPlay !== '') {
+            if (playBtn) playBtn.classList.remove('hidden');
+        } else if (srcPresent && canPlay === '') {
+            // Browser reports it cannot play the declared type
+            console.warn('Audio source present but browser reports it may not be playable.');
+            if (playBtn) playBtn.classList.add('hidden');
+        }
+    }
+
+    // default typing delay
+    let typingDelay = 24;
+
+    // If audio exists and is usable, attempt to sync typing speed to audio duration
+    if (currentAudio && currentAudio.src) {
+        currentAudio.muted = audioMuted;
+        
+        const computeDelay = () => {
+            if (currentAudio && !isNaN(currentAudio.duration) && currentAudio.duration > 0) {
+                const charCount = Math.max(1, (orbs[idx].content || '').length);
+                const approxMsPerChar = Math.max(10, Math.floor((currentAudio.duration * 1000) / charCount));
+                typingDelay = Math.min(40, Math.max(12, approxMsPerChar)); // keep in reasonable range
+            }
+        };
+
+        if (currentAudio.readyState >= 1 && !isNaN(currentAudio.duration)) {
+            computeDelay();
+        } else {
+            currentAudio.addEventListener('loadedmetadata', computeDelay, { once: true });
+        }
+
+        // Try to play — if autoplay blocked, the play button is visible for manual play
+        currentAudio.play().catch(e => {
+            console.log("Audio autoplay blocked. User must click 'Play voice'.", e && e.message);
+            if (playBtn && playBtn.classList.contains('hidden') === false) {
+                playBtn.classList.add('border-warm-amber', 'animate-pulse');
+                setTimeout(() => playBtn.classList.remove('border-warm-amber', 'animate-pulse'), 2000);
+            }
+        });
+    }
+
+    // start the typewriter with computed delay
+    await typewriter(textEl, (orbs[idx].content || '').replace(/-/g, ''), typingDelay);
+
+    // update state
+    if (idx > lastReadIndex) lastReadIndex = idx;
+    if (idx === unlockedIndex && unlockedIndex < orbs.length - 1) unlockedIndex++;
+    renderOrbs();
+
+    // sparkle next unlocked
+    const grid = document.getElementById('orb-grid');
+    const children = grid ? grid.children : [];
+    if (unlockedIndex < children.length){
+        const next = children[unlockedIndex];
+        if (next){
+            next.classList.add('sparkle-animation');
+            setTimeout(()=> next.classList.remove('sparkle-animation'), 600);
+        }
+    } else {
+        showFinal();
+    }
+
+    // set focus to close button for keyboard users
+    const closeBtn = document.getElementById('close-modal-btn');
+    if (closeBtn) closeBtn.focus();
+}
+
+/* Close modal and cleanup */
+function closeModal(){
+    const modal = document.getElementById('story-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.getElementById('modal-content').classList.remove('modal-enter');
+
+    if (currentAudio){
+        try { currentAudio.pause(); currentAudio.currentTime = 0; } catch(e) {}
+    }
+    document.body.style.overflow = ''; // restore scroll
+
+    // restore focus
+    if (lastFocusedElementBeforeModal && typeof lastFocusedElementBeforeModal.focus === 'function'){
+        lastFocusedElementBeforeModal.focus();
+    }
+
+    if (unlockedIndex >= orbs.length){
+        showFinal();
+    }
+}
+
+/* Show final message */
+function showFinal(){
+    const f = document.getElementById('final-message');
+    if (!f) return;
+    f.classList.remove('hidden');
+    document.getElementById('final-text').textContent = "I built this because I couldn't find another way to make you see the full truth. I was afraid, I made mistakes, but every choice I made was because I cared. If you ever feel ready to hear me, I'll speak gently, honestly, and I will accept the consequence. Thank you for reading.";
+    f.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* Modal audio controls + keyboard shortcuts */
+document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!target) return;
+    if (target.id === 'play-audio'){ 
+        if (currentAudio) {
+            target.classList.remove('border-warm-amber', 'animate-pulse'); // Remove highlight on user click
+            // Only attempt to play if src is present
+            if (currentAudio.src && currentAudio.src.trim() !== '') {
+                currentAudio.play().catch(err => console.warn('Play failed', err));
+            } else {
+                console.warn('No audio source available to play.');
+            }
+        }
+    }
+    if (target.id === 'replay-audio'){ if (currentAudio && currentAudio.src && currentAudio.src.trim() !== ''){ currentAudio.currentTime = 0; currentAudio.play().catch(()=>{}); } }
+    if (target.id === 'mute-audio'){ audioMuted = !audioMuted; if (currentAudio) currentAudio.muted = audioMuted; target.textContent = audioMuted ? 'Unmute' : 'Mute'; }
+});
+
+/* Close button */
+const closeBtn = document.getElementById('close-modal-btn');
+if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+/* Keyboard: Escape closes modal; trap tab focus inside modal when open */
+document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('story-modal');
+    if (!modal || modal.classList.contains('hidden')) return;
+
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+    }
+
+    // focus trap (basic)
+    if (e.key === 'Tab') {
+        const focusable = modal.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    }
+});
+
+/* init */
+renderOrbs();
+updateTimer();
+setInterval(updateTimer, 1000);
+</script>
+</body>
+</html>
